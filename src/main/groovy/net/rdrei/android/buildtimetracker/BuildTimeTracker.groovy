@@ -2,6 +2,7 @@ package net.rdrei.android.buildtimetracker
 
 import net.rdrei.android.buildtimetracker.reporters.AbstractBuildTimeTrackerReporter
 import net.rdrei.android.buildtimetracker.reporters.CSVSummaryReporter
+import net.rdrei.android.buildtimetracker.reporters.CSVTotalTimeReporter
 import net.rdrei.android.buildtimetracker.reporters.JSONReporter
 import net.rdrei.android.buildtimetracker.reporters.SummaryReporter
 import net.rdrei.android.buildtimetracker.reporters.CSVReporter
@@ -15,6 +16,7 @@ class BuildTimeTrackerPlugin implements Plugin<Project> {
         summary: SummaryReporter,
         csv: CSVReporter,
         csvSummary: CSVSummaryReporter,
+        csvTotalTime: CSVTotalTimeReporter,
         json: JSONReporter
     ]
     Logger logger

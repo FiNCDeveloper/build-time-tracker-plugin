@@ -1,0 +1,128 @@
+package net.rdrei.android.buildtimetracker.reporters
+
+import au.com.bytecode.opencsv.CSVReader
+import groovy.mock.interceptor.MockFor
+import net.rdrei.android.buildtimetracker.Timing;
+
+import org.gradle.api.logging.Logger
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder;
+
+import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertNotEquals
+import static org.junit.Assert.assertNotNull
+import static org.junit.Assert.assertTrue;
+
+public class CSVTotalTimeReporterTest {
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder()
+
+    Logger mockLogger = new MockFor(Logger).proxyInstance()
+
+    File mkTemporaryFile(String name) {
+        File file = folder.newFile name
+        if (file.exists()) {
+            file.delete()
+        }
+
+        file
+    }
+
+    @Test
+    void createsOutputCSV() {
+        File file = mkTemporaryFile "test.csv"
+        assertFalse("Output CSV exists.", file.exists())
+
+        CSVTotalTimeReporter reporter = new CSVTotalTimeReporter([ output: file.getPath() ], mockLogger)
+
+        reporter.run([
+                new Timing(100, "task1", true, false, true),
+                new Timing(200, "task2", false, true, false)
+        ])
+
+        assertTrue "Output CSV does not exist.", file.exists()
+    }
+
+    @Test
+    void writesHeaderToOutputCSV() {
+        File file = mkTemporaryFile "test.csv"
+        CSVTotalTimeReporter reporter = new CSVTotalTimeReporter([ output: file.getPath() ], mockLogger)
+
+        reporter.run([
+                new Timing(100, "task1", true, false, true),
+                new Timing(200, "task2", false, true, false)
+        ])
+
+        CSVReader reader = new CSVReader(new FileReader(file))
+
+        String[] header = reader.readNext()
+        assertNotNull header
+        assertEquals 6, header.length
+        assertEquals "time_taken", header[0]
+        assertEquals "success", header[1]
+        assertEquals "date", header[2]
+        assertEquals "cpu", header[3]
+        assertEquals "memory", header[4]
+        assertEquals "os", header[5]
+
+        reader.close()
+    }
+
+    @Test
+    void doesNotWritesHeaderToOutputCSVWhenHeaderOptionFalse() {
+        File file = mkTemporaryFile "test.csv"
+        CSVTotalTimeReporter reporter = new CSVTotalTimeReporter([
+                output: file.getPath(),
+                header: "false"
+        ], mockLogger)
+
+        reporter.run([
+                new Timing(100, "task1", true, false, true),
+                new Timing(200, "task2", false, true, false)
+        ])
+
+        CSVReader reader = new CSVReader(new FileReader(file))
+
+        String[] line = reader.readNext()
+        assertNotNull line
+        assertEquals 6, line.length
+        assertNotEquals "time_taken", line[0]
+        assertNotEquals "success", line[1]
+        assertNotEquals "date", line[2]
+        assertNotEquals "cpu", line[3]
+        assertNotEquals "memory", line[4]
+        assertNotEquals "os", line[5]
+
+        reader.close()
+    }
+
+    @Test
+    void writesTimingsToOutputCSV() {
+        File file = mkTemporaryFile "test.csv"
+        CSVTotalTimeReporter reporter = new CSVTotalTimeReporter([
+                output: file.getPath(),
+                header: false
+        ], mockLogger)
+
+        reporter.run([
+                new Timing(100, "task1", true, false, true),
+                new Timing(200, "task2", false, true, false)
+        ])
+
+        CSVReader reader = new CSVReader(new FileReader(file))
+
+        Iterator<String[]> lines = reader.readAll().iterator()
+
+        // Verify first task
+        String[] line = lines.next()
+        assertNotNull line
+        assertEquals 6, line.length
+        assertEquals "300", line[0] // total time taken
+        assertEquals "false", line[1] // build failed
+
+        reader.close()
+    }
+
+}
