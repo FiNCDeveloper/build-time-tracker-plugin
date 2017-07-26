@@ -38,8 +38,13 @@ public class CSVTotalTimeReporter extends AbstractBuildTimeTrackerReporter {
         CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(file, append)))
 
         if (getOption("header", "true").toBoolean() || fileEmpty) {
-            String[] headers = ["time_taken", "success", "date",
-                    "cpu", "memory", "os"]
+            String[] headers = ["time_taken",
+                                "success",
+                                "date",
+                                "task_count",
+                                "cpu",
+                                "memory",
+                                "os"]
             writer.writeNext(headers)
         }
 
@@ -52,6 +57,8 @@ public class CSVTotalTimeReporter extends AbstractBuildTimeTrackerReporter {
 
         def timeTaken = timings.sum { it -> it.ms }
 
+        def taskCount = timings.size()
+
         timings.each { timing ->
             // if any timing is not successful, the overall success is false
             success = timing.success && success
@@ -61,6 +68,7 @@ public class CSVTotalTimeReporter extends AbstractBuildTimeTrackerReporter {
                 timeTaken,
                 success.toString(),
                 df.format(new Date(timestamp)),
+                taskCount,
                 cpuId,
                 maxMem,
                 osId

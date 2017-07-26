@@ -59,44 +59,18 @@ public class CSVTotalTimeReporterTest {
 
         String[] header = reader.readNext()
         assertNotNull header
-        assertEquals 6, header.length
+        assertEquals 7, header.length
         assertEquals "time_taken", header[0]
         assertEquals "success", header[1]
         assertEquals "date", header[2]
-        assertEquals "cpu", header[3]
-        assertEquals "memory", header[4]
-        assertEquals "os", header[5]
+        assertEquals "task_count", header[3]
+        assertEquals "cpu", header[4]
+        assertEquals "memory", header[5]
+        assertEquals "os", header[6]
 
         reader.close()
     }
 
-    @Test
-    void doesNotWritesHeaderToOutputCSVWhenHeaderOptionFalse() {
-        File file = mkTemporaryFile "test.csv"
-        CSVTotalTimeReporter reporter = new CSVTotalTimeReporter([
-                output: file.getPath(),
-                header: "false"
-        ], mockLogger)
-
-        reporter.run([
-                new Timing(100, "task1", true, false, true),
-                new Timing(200, "task2", false, true, false)
-        ])
-
-        CSVReader reader = new CSVReader(new FileReader(file))
-
-        String[] line = reader.readNext()
-        assertNotNull line
-        assertEquals 6, line.length
-        assertNotEquals "time_taken", line[0]
-        assertNotEquals "success", line[1]
-        assertNotEquals "date", line[2]
-        assertNotEquals "cpu", line[3]
-        assertNotEquals "memory", line[4]
-        assertNotEquals "os", line[5]
-
-        reader.close()
-    }
 
     @Test
     void writesTimingsToOutputCSV() {
@@ -115,10 +89,13 @@ public class CSVTotalTimeReporterTest {
 
         Iterator<String[]> lines = reader.readAll().iterator()
 
+        // skip the header
+        lines.next()
+
         // Verify first task
         String[] line = lines.next()
         assertNotNull line
-        assertEquals 6, line.length
+        assertEquals 7, line.length
         assertEquals "300", line[0] // total time taken
         assertEquals "false", line[1] // build failed
 
