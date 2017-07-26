@@ -57,11 +57,12 @@ public class CSVTotalTimeReporter extends AbstractBuildTimeTrackerReporter {
 
         def timeTaken = timings.sum { it -> it.ms }
 
-        def taskCount = timings.size()
+        def taskCount = timings.sum { it -> if (!it.skipped) 1 else 0 }
 
         timings.each { timing ->
             // if any timing is not successful, the overall success is false
             success = timing.success && success
+
         }
 
         String[] line = [
