@@ -16,6 +16,12 @@ public class CSVTotalTimeReporter extends AbstractBuildTimeTrackerReporter {
 
     @Override
     def run(List<Timing> timings) {
+
+        // don't run if there are no values
+        if (timings.isEmpty()) {
+            return
+        }
+
         long timestamp = new TrueTimeProvider().getCurrentTime()
         String output = getOption("output", "")
         boolean append = getOption("append", "false").toBoolean()
@@ -26,9 +32,12 @@ public class CSVTotalTimeReporter extends AbstractBuildTimeTrackerReporter {
         File file = new File(output)
         file.getParentFile()?.mkdirs()
 
+        // if the file is empty, write some headers
+        def fileEmpty = file.length() == 0
+
         CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(file, append)))
 
-        if (getOption("header", "true").toBoolean()) {
+        if (getOption("header", "true").toBoolean() || fileEmpty) {
             String[] headers = ["time_taken", "success", "date",
                     "cpu", "memory", "os"]
             writer.writeNext(headers)
